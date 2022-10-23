@@ -1,12 +1,12 @@
 import json
 import logging
-from bson import json_util
-
-from collections import Counter,  OrderedDict
+from collections import Counter, OrderedDict
 
 import pymongo  # package for working with MongoDB
+from bson import json_util
 
 log = logging.getLogger(__name__)
+
 
 def _get_collection():
     log.info("Connecting DB...")
@@ -18,6 +18,7 @@ def _get_collection():
 
 
 def set_up_db():
+    """It saves all data in DB"""
 
     collection = _get_collection()
     with open("data/companies.json", "r") as f:
@@ -28,16 +29,16 @@ def set_up_db():
     collection.insert_many(companies)
 
 
-def get_companies(sorted_by: str=None)->dict:
-    """_summary_
+def get_companies(sorted_by: str = None) -> dict:
+    """Companies list
 
-    :param sorted_by: _description_
+    :param sorted_by: optional sorted by size or year founded
     :type sorted_by: str
-    :raises ValueError: _description_
-    :return: _description_
+    :raises ValueError: ValueError
+    :return: companies list
     :rtype: dict
     """
-    if sorted_by not in ['founded', 'size'] and sorted_by is not None:
+    if sorted_by not in ["founded", "size"] and sorted_by is not None:
         raise ValueError(f"Invalid sorted_by argument: {sorted_by}")
     collection = _get_collection()
 
@@ -49,23 +50,39 @@ def get_companies(sorted_by: str=None)->dict:
 
     response = json.loads(json_util.dumps(companies))
 
-    if sorted_by == 'size':
-        response = sorted(response, key=lambda d: (d[sorted_by] is None, d[sorted_by] == "", int(d[sorted_by].split('-')[0].replace('+', ''))))
-    elif sorted_by == 'founded':
-        response = sorted(response, key=lambda d: (d[sorted_by] is None, d[sorted_by] == "", d[sorted_by]))
+    if sorted_by == "size":
+        response = sorted(
+            response,
+            key=lambda d: (
+                d[sorted_by] is None,
+                d[sorted_by] == "",
+                int(d[sorted_by].split("-")[0].replace("+", "")),
+            ),
+        )
+    elif sorted_by == "founded":
+        response = sorted(
+            response,
+            key=lambda d: (d[sorted_by] is None, d[sorted_by] == "", d[sorted_by]),
+        )
     return response
 
-def get_summary():
+
+def get_summary() -> dict:
+    """Summary companies data
+
+    :return: Summary companies data
+    :rtype: dict
+    """
     companies = get_companies()
 
-    size = Counter([x['size'] for x in companies])
-    founded = Counter([x['founded'] for x in companies])
-    industry = Counter([x['industry'] for x in companies])
+    size = Counter([x["size"] for x in companies])
+    founded = Counter([x["founded"] for x in companies])
+    industry = Counter([x["industry"] for x in companies])
 
     response = {
-        'size': dict(OrderedDict(size.most_common())),
-        'founded': dict(OrderedDict(founded.most_common())),
-        'industry': dict(OrderedDict(industry.most_common())),
+        "size": dict(OrderedDict(size.most_common())),
+        "founded": dict(OrderedDict(founded.most_common())),
+        "industry": dict(OrderedDict(industry.most_common())),
     }
 
     return response
