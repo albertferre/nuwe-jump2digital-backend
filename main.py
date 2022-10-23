@@ -17,3 +17,8 @@ app = FastAPI()
 @app.get("/")
 def root():
     return "Hello Nuwe!"
+
+@app.get("/companies")
+def companies(sorted_by: str = None):
+
+    return get_companies(sorted_by=sorted_by)
