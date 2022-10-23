@@ -1,17 +1,23 @@
 import json
 import logging
+from bson import json_util
 
 import pymongo  # package for working with MongoDB
 
 log = logging.getLogger(__name__)
 
-
-def set_up_db():
+def _get_collection():
     log.info("Connecting DB...")
     client = pymongo.MongoClient("mongodb://localhost:27017/")
     db = client["companiesDB"]
     collection = db["companies"]
 
+    return collection
+
+
+def set_up_db():
+
+    collection = _get_collection()
     with open("data/companies.json", "r") as f:
         companies = json.load(f)
     log.info("Reset DB...")
@@ -20,15 +26,18 @@ def set_up_db():
     collection.insert_many(companies)
 
 
-def get_companies(sorted_by: str = None):
-    client = pymongo.MongoClient("mongodb://localhost:27017/")
-    db = client["companiesDB"]
-    collection = db["companies"]
+def get_companies(sorted_by: str)->dict:
+    if sorted_by not in ['founded', 'size'] and sorted_by is not None:
+        raise ValueError(f"Invalid sorted_by argument: {sorted_by}")
+    collection = _get_collection()
 
-    cursor = collection.find({}).sort([(sorted_by, pymongo.ASCENDING)])  # size
+    cursor = collection.find({})
 
     companies = []
     for document in cursor:
         companies.append(document)
 
-    return companies
+    response = json.loads(json_util.dumps(companies))
+    response = sorted(response, key=lambda d: (d[sorted_by] is None, d[sorted_by] == "", d[sorted_by]))
+    return response
+
