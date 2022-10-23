@@ -1,4 +1,5 @@
 import logging
+from fastapi import FastAPI
 
 from src.db import get_companies, set_up_db
 
@@ -8,5 +9,11 @@ logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(filename)s > %(funcName)s: %(message)s",
 )
 
-if __name__ == "__main__":
-    set_up_db()
+# Preparing database
+set_up_db()
+
+app = FastAPI()
+
+@app.get("/")
+def root():
+    return "Hello Nuwe!"
