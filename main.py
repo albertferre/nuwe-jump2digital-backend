@@ -1,7 +1,7 @@
 import logging
 from fastapi import FastAPI
 
-from src.db import get_companies, set_up_db
+from src.db import get_companies, set_up_db, get_summary
 
 # set up logger
 logging.basicConfig(
@@ -22,3 +22,8 @@ def root():
 def companies(sorted_by: str = None):
 
     return get_companies(sorted_by=sorted_by)
+
+@app.get("/summary")
+def summary():
+
+    return get_summary()

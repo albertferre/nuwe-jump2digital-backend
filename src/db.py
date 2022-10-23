@@ -2,6 +2,8 @@ import json
 import logging
 from bson import json_util
 
+from collections import Counter,  OrderedDict
+
 import pymongo  # package for working with MongoDB
 
 log = logging.getLogger(__name__)
@@ -46,10 +48,24 @@ def get_companies(sorted_by: str=None)->dict:
         companies.append(document)
 
     response = json.loads(json_util.dumps(companies))
-    
+
     if sorted_by == 'size':
         response = sorted(response, key=lambda d: (d[sorted_by] is None, d[sorted_by] == "", int(d[sorted_by].split('-')[0].replace('+', ''))))
     elif sorted_by == 'founded':
         response = sorted(response, key=lambda d: (d[sorted_by] is None, d[sorted_by] == "", d[sorted_by]))
     return response
 
+def get_summary():
+    companies = get_companies()
+
+    size = Counter([x['size'] for x in companies])
+    founded = Counter([x['founded'] for x in companies])
+    industry = Counter([x['industry'] for x in companies])
+
+    response = {
+        'size': dict(OrderedDict(size.most_common())),
+        'founded': dict(OrderedDict(founded.most_common())),
+        'industry': dict(OrderedDict(industry.most_common())),
+    }
+
+    return response
