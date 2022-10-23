@@ -26,7 +26,15 @@ def set_up_db():
     collection.insert_many(companies)
 
 
-def get_companies(sorted_by: str)->dict:
+def get_companies(sorted_by: str=None)->dict:
+    """_summary_
+
+    :param sorted_by: _description_
+    :type sorted_by: str
+    :raises ValueError: _description_
+    :return: _description_
+    :rtype: dict
+    """
     if sorted_by not in ['founded', 'size'] and sorted_by is not None:
         raise ValueError(f"Invalid sorted_by argument: {sorted_by}")
     collection = _get_collection()
@@ -38,6 +46,10 @@ def get_companies(sorted_by: str)->dict:
         companies.append(document)
 
     response = json.loads(json_util.dumps(companies))
-    response = sorted(response, key=lambda d: (d[sorted_by] is None, d[sorted_by] == "", d[sorted_by]))
+    
+    if sorted_by == 'size':
+        response = sorted(response, key=lambda d: (d[sorted_by] is None, d[sorted_by] == "", int(d[sorted_by].split('-')[0].replace('+', ''))))
+    elif sorted_by == 'founded':
+        response = sorted(response, key=lambda d: (d[sorted_by] is None, d[sorted_by] == "", d[sorted_by]))
     return response
 
